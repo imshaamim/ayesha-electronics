@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>সফটওয়্যার তথ্য ফর্ম</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column of numbered sections, like pages of a hisab khata, with a thin progress rule pinned to the top. */
+:root{
+  --paper:#000000;
+  --card:#111614;
+  --ink:#eef3f0;
+  --muted:#9aa9a2;
+  --line:#2a3631;
+  --accent:#3dbfa3;
+  --accent-ink:#04201a;
+  --soft:#12302a;
+  --danger:#ff8f86;
+  --font-display:"Noto Serif Bengali","Hind Siliguri",Georgia,serif;
+  --font-body:"Hind Siliguri","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:17px;
+  line-height:1.75;
+}
+.progress{
+  position:sticky;top:0;z-index:5;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.progress-inner{
+  max-width:720px;margin:0 auto;padding:8px 16px;
+  display:flex;align-items:center;gap:12px;
+  font-size:14px;color:var(--muted);
+}
+.bar{flex:1;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar > i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease}
+@media (prefers-reduced-motion: reduce){.bar > i{transition:none}}
+
+.wrap{max-width:720px;margin:0 auto;padding:28px 16px 64px}
+.eyebrow{margin:0 0 6px;font-size:14px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+h1{
+  margin:0 0 12px;
+  font-family:var(--font-display);
+  font-size:clamp(28px,6vw,38px);
+  line-height:1.35;
+  text-wrap:balance;
+}
+.lead{margin:0 0 8px;color:var(--muted);max-width:60ch}
+.lead strong{color:var(--ink)}
+
+.sec{
+  margin-top:28px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px 18px 6px;
+}
+.sec h2{
+  margin:0 0 4px;
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--font-display);
+  font-size:21px;line-height:1.4;
+  text-wrap:balance;
+}
+.num{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);
+  font-family:var(--font-body);font-size:17px;font-weight:700;
+}
+.sec .hint{margin:0 0 18px;color:var(--muted);font-size:15px;padding-left:46px}
+
+.field{margin:0 0 20px;border:0;padding:0;min-width:0}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 16px}
+label.t,legend.t{display:block;margin:0 0 6px;font-weight:600;font-size:16px;padding:0}
+.req{color:var(--danger);margin-left:2px}
+.opt{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px}
+.sub{margin:-2px 0 8px;color:var(--muted);font-size:14px}
+
+input[type=text],input[type=tel],input[type=email],select,textarea{
+  width:100%;
+  font:inherit;font-size:17px;line-height:1.5;
+  color:var(--ink);background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;
+  padding:11px 14px;min-height:48px;
+}
+textarea{resize:vertical;min-height:96px}
+select{appearance:auto}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a.btn:focus-visible{
+  outline:3px solid var(--accent);outline-offset:2px;
+}
+[aria-invalid="true"]{border-color:var(--danger) !important}
+input,select,textarea,fieldset{scroll-margin-top:72px}
+.err{margin:6px 0 0;color:var(--danger);font-size:15px;font-weight:500}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.choices.one{grid-template-columns:1fr}
+.choice{position:relative;display:block;cursor:pointer}
+.choice input[type=radio],.choice input[type=checkbox]{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.choice > span{
+  display:flex;align-items:center;gap:12px;
+  min-height:50px;padding:10px 14px;
+  background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;
+  line-height:1.45;
+}
+.choice > span::before{
+  content:"";flex:none;width:20px;height:20px;
+  border:2px solid var(--muted);border-radius:6px;
+  display:grid;place-items:center;
+  font-size:14px;font-weight:700;line-height:1;color:var(--accent-ink);
+}
+.choice.radio > span::before{border-radius:50%}
+.choice input:checked + span{border-color:var(--accent);background:var(--soft);font-weight:600}
+.choice input:checked + span::before{background:var(--accent);border-color:var(--accent)}
+.choice.check input:checked + span::before{content:"✓"}
+.choice.radio input:checked + span::before{box-shadow:inset 0 0 0 4px var(--soft)}
+.choice input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+
+.dot{flex:none;width:24px;height:24px;border-radius:50%;background:var(--c);border:1px solid rgba(255,255,255,.4)}
+.custom-color{display:flex;align-items:center;gap:10px}
+.custom-color input[type=color]{width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
+.preview{
+  margin-top:12px;border-radius:12px;padding:14px 16px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+  font-weight:700;
+}
+.preview .pv-btn{
+  font-size:14px;font-weight:600;padding:6px 14px;border-radius:99px;
+  background:rgba(255,255,255,.2);border:1px solid currentColor;
+}
+.preview-cap{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+.actions{margin:28px 0 0;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  font:inherit;font-size:17px;font-weight:600;
+  min-height:50px;padding:10px 24px;border-radius:10px;
+  border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  cursor:pointer;text-decoration:none;
+}
+.btn.ghost{background:transparent;color:var(--accent)}
+.note{margin:14px 0 0;color:var(--muted);font-size:14px}
+
+.result h2{
+  font-family:var(--font-display);font-size:26px;line-height:1.4;margin:0 0 8px;text-wrap:balance;
+}
+.result .warn{
+  margin:0 0 16px;padding:12px 14px;border-radius:10px;
+  background:var(--soft);border:1px solid var(--accent);
+}
+.result textarea{min-height:340px;font-size:15px;line-height:1.7}
+.status{min-height:26px;margin:10px 0 0;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true">
+  <div class="progress-inner">
+    <div class="bar"><i id="barFill"></i></div>
+    <span id="barText">০/৯ পূরণ</span>
+  </div>
+</div>
+
+<main class="wrap">
+
+<div id="formView">
+  <p class="eyebrow">কিস্তি, ক্রেতা ও স্টক ব্যবস্থাপনা সফটওয়্যার</p>
+  <h1>আপনার সফটওয়্যারের তথ্য ফর্ম</h1>
+  <p class="lead">নিচের তথ্য দিলে আপনার দোকানের জন্য ক্রেতা, পণ্য ও কিস্তির বাকির হিসাব রাখার সফটওয়্যার বানানো যাবে। সময় লাগবে প্রায় ৫ মিনিট। কোনো ঘর বাধ্যতামূলক নয়, যা জানেন তাই লিখুন।</p>
+
+  <form id="f" novalidate autocomplete="on">
+
+    <!-- ১ দোকান -->
+    <section class="sec" aria-labelledby="h1s">
+      <h2 id="h1s"><span class="num">১</span>দোকানের তথ্য</h2>
+      <p class="hint">যে দোকানের জন্য সফটওয়্যার হবে।</p>
+
+      <div class="field">
+        <label class="t" for="shopName">দোকানের নাম</label>
+        <input type="text" id="shopName" autocomplete="organization" aria-describedby="err-shopName">
+        <p class="err" id="err-shopName" hidden></p>
+      </div>
+
+      <div class="field">
+        <label class="t" for="shopType">দোকানে কী বিক্রি হয়?</label>
+        <select id="shopType" aria-describedby="err-shopType">
+          <option value="">বেছে নিন</option>
+          <option>মোবাইল ও ইলেকট্রনিক্স</option>
+          <option>টিভি, ফ্রিজ ও গৃহস্থালি সামগ্রী</option>
+          <option>ফার্নিচার</option>
+          <option>মোটরসাইকেল ও বাইক</option>
+          <option>কম্পিউটার ও ল্যাপটপ</option>
+          <option>পোশাক ও কাপড়</option>
+          <option>অন্যান্য</option>
+        </select>
+        <p class="err" id="err-shopType" hidden></p>
+      </div>
+
+      <div class="field" id="otherTypeWrap" hidden>
+        <label class="t" for="shopTypeOther">অন্য কী বিক্রি হয়, লিখুন</label>
+        <input type="text" id="shopTypeOther">
+      </div>
+
+      <div class="field">
+        <label class="t" for="shopAddress">দোকানের ঠিকানা</label>
+        <textarea id="shopAddress" rows="3" autocomplete="street-address" aria-describedby="err-shopAddress"></textarea>
+        <p class="err" id="err-shopAddress" hidden></p>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label class="t" for="shopPhone">দোকানের ফোন নম্বর</label>
+          <input type="tel" id="shopPhone" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" aria-describedby="err-shopPhone">
+          <p class="err" id="err-shopPhone" hidden></p>
+        </div>
+        <div class="field">
+          <label class="t" for="soldItems">কিস্তিতে কোন কোন পণ্য দেন?<span class="opt">ঐচ্ছিক</span></label>
+          <input type="text" id="soldItems" placeholder="যেমন: ফ্রিজ, টিভি, মোবাইল">
+        </div>
+      </div>
+
+      <fieldset class="field">
+        <legend class="t">দোকানের লোগো আছে কি?<span class="opt">ঐচ্ছিক</span></legend>
+        <div class="choices">
+          <label class="choice radio"><input type="radio" name="logo" value="আছে, আলাদাভাবে পাঠাব"><span>আছে, আলাদাভাবে পাঠাব</span></label>
+          <label class="choice radio"><input type="radio" name="logo" value="নেই"><span>নেই</span></label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ২ মালিক -->
+    <section class="sec" aria-labelledby="h2s">
+      <h2 id="h2s"><span class="num">২</span>মালিকের ব্যক্তিগত তথ্য</h2>
+      <p class="hint">যোগাযোগ ও সফটওয়্যার হস্তান্তরের জন্য।</p>
+
+      <div class="field">
+        <label class="t" for="ownerName">আপনার পুরো নাম</label>
+        <input type="text" id="ownerName" autocomplete="name" aria-describedby="err-ownerName">
+        <p class="err" id="err-ownerName" hidden></p>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label class="t" for="ownerPhone">ব্যক্তিগত ফোন নম্বর</label>
+          <input type="tel" id="ownerPhone" inputmode="tel" placeholder="01XXXXXXXXX" aria-describedby="err-ownerPhone">
+          <p class="err" id="err-ownerPhone" hidden></p>
+        </div>
+        <div class="field">
+          <label class="t" for="ownerWa">WhatsApp নম্বর<span class="opt">আলাদা হলে</span></label>
+          <input type="tel" id="ownerWa" inputmode="tel" placeholder="01XXXXXXXXX">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="t" for="ownerAddress">ব্যক্তিগত ঠিকানা</label>
+        <textarea id="ownerAddress" rows="3" aria-describedby="err-ownerAddress"></textarea>
+        <p class="err" id="err-ownerAddress" hidden></p>
+      </div>
+
+      <div class="field">
+        <label class="t" for="ownerEmail">ইমেইল<span class="opt">ঐচ্ছিক</span></label>
+        <input type="email" id="ownerEmail" autocomplete="email" aria-describedby="err-ownerEmail">
+        <p class="err" id="err-ownerEmail" hidden></p>
+      </div>
+    </section>
+
+    <!-- ৩ ফিচার -->
+    <section class="sec" aria-labelledby="h3s">
+      <h2 id="h3s"><span class="num">৩</span>সফটওয়্যারে কী কী থাকবে</h2>
+      <p class="hint">যেগুলো লাগবে টিক দিন। প্রথম পাঁচটি সাধারণত সবার লাগে, তাই আগে থেকে টিক দেওয়া আছে।</p>
+
+      <fieldset class="field" id="features" aria-describedby="err-features">
+        <legend class="t" style="position:absolute;left:-9999px">ফিচার</legend>
+        <div class="choices">
+          <label class="choice check"><input type="checkbox" name="feature" checked><span>দোকানের তথ্য সংরক্ষণ</span></label>
+          <label class="choice check"><input type="checkbox" name="feature" checked><span>পণ্য ও স্টকের হিসাব</span></label>
+          <label class="choice check"><input type="checkbox" name="feature" checked><span>ক্রেতার তথ্য, ছবিসহ</span></label>
+          <label class="choice check"><input type="checkbox" name="feature" checked><span>কিস্তি ও বাকির হিসাব</span></label>
+          <label class="choice check"><input type="checkbox" name="feature" checked><span>ক্রেতা ও বাকি খুঁজে দেখা</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>কিস্তি আদায়ের রসিদ প্রিন্ট</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>দৈনিক ও মাসিক আদায়ের রিপোর্ট</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>জামিনদারের তথ্য</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>NID ও কাগজপত্রের ছবি রাখা</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>SMS দিয়ে কিস্তির তারিখ মনে করানো</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>স্টাফের জন্য আলাদা লগইন</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>ডেটার ব্যাকআপ</span></label>
+          <label class="choice check"><input type="checkbox" name="feature"><span>একাধিক শাখা</span></label>
+        </div>
+        <p class="err" id="err-features" hidden></p>
+      </fieldset>
+
+      <div class="field">
+        <label class="t" for="extra">আরও কিছু লাগলে লিখুন<span class="opt">ঐচ্ছিক</span></label>
+        <textarea id="extra" rows="3"></textarea>
+      </div>
+    </section>
+
+    <!-- ৪ কিস্তির নিয়ম -->
+    <section class="sec" aria-labelledby="h4s">
+      <h2 id="h4s"><span class="num">৪</span>আপনার কিস্তির নিয়ম</h2>
+      <p class="hint">হিসাব আপনার নিয়মে চলার জন্য এগুলো জানা দরকার।</p>
+
+      <fieldset class="field" id="instType" aria-describedby="err-instType">
+        <legend class="t">কিস্তি কীভাবে নেন?</legend>
+        <div class="choices">
+          <label class="choice check"><input type="checkbox" name="inst"><span>দৈনিক</span></label>
+          <label class="choice check"><input type="checkbox" name="inst"><span>সাপ্তাহিক</span></label>
+          <label class="choice check"><input type="checkbox" name="inst"><span>মাসিক</span></label>
+          <label class="choice check"><input type="checkbox" name="inst"><span>ক্রেতাভেদে আলাদা</span></label>
+        </div>
+        <p class="err" id="err-instType" hidden></p>
+      </fieldset>
+
+      <div class="field">
+        <label class="t" for="clientCount">এখন মোট কতজন কিস্তির ক্রেতা আছে?<span class="opt">আনুমানিক</span></label>
+        <select id="clientCount">
+          <option value="">বেছে নিন</option>
+          <option>৫০ জনের কম</option>
+          <option>৫০ থেকে ২০০ জন</option>
+          <option>২০০ থেকে ৫০০ জন</option>
+          <option>৫০০ জনের বেশি</option>
+        </select>
+      </div>
+
+      <fieldset class="field">
+        <legend class="t">লাভ কীভাবে ধরেন?</legend>
+        <div class="choices one">
+          <label class="choice radio"><input type="radio" name="profit" value="মোট দামের সাথে লাভ যোগ করে কিস্তি ভাগ করি"><span>মোট দামের সাথে লাভ যোগ করে কিস্তি ভাগ করি</span></label>
+          <label class="choice radio"><input type="radio" name="profit" value="প্রতি মাসে শতকরা হারে লাভ ধরি"><span>প্রতি মাসে শতকরা হারে লাভ ধরি</span></label>
+          <label class="choice radio"><input type="radio" name="profit" value="অন্যভাবে, পরে জানাব"><span>অন্যভাবে, পরে জানাব</span></label>
+        </div>
+      </fieldset>
+
+      <div class="row">
+        <fieldset class="field">
+          <legend class="t">প্রথমে কিছু টাকা (ডাউন পেমেন্ট) নেন?</legend>
+          <div class="choices one">
+            <label class="choice radio"><input type="radio" name="down" value="নিই"><span>নিই</span></label>
+            <label class="choice radio"><input type="radio" name="down" value="নিই না"><span>নিই না</span></label>
+            <label class="choice radio"><input type="radio" name="down" value="ক্রেতাভেদে আলাদা"><span>ক্রেতাভেদে আলাদা</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="field">
+          <legend class="t">দেরিতে দিলে জরিমানা নেন?</legend>
+          <div class="choices one">
+            <label class="choice radio"><input type="radio" name="late" value="নিই"><span>নিই</span></label>
+            <label class="choice radio"><input type="radio" name="late" value="নিই না"><span>নিই না</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <fieldset class="field">
+        <legend class="t">খাতায় থাকা আগের হিসাব কি সফটওয়্যারে তুলতে হবে?</legend>
+        <div class="choices">
+          <label class="choice radio"><input type="radio" name="old" value="হ্যাঁ, আগের হিসাব তুলতে হবে"><span>হ্যাঁ, আগের হিসাব তুলতে হবে</span></label>
+          <label class="choice radio"><input type="radio" name="old" value="না, নতুন করে শুরু করব"><span>না, নতুন করে শুরু করব</span></label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ৫ ডিজাইন -->
+    <section class="sec" aria-labelledby="h5s">
+      <h2 id="h5s"><span class="num">৫</span>নাম ও রং</h2>
+      <p class="hint">সফটওয়্যার দেখতে কেমন হবে।</p>
+
+      <div class="field">
+        <label class="t" for="projectName">সফটওয়্যারের নাম<span class="opt">ঐচ্ছিক, না দিলে দোকানের নামেই হবে</span></label>
+        <input type="text" id="projectName">
+      </div>
+
+      <fieldset class="field">
+        <legend class="t">পছন্দের রং<span class="opt">একাধিক বেছে নিতে পারেন</span></legend>
+        <div class="choices" id="colors">
+          <label class="choice check"><input type="checkbox" name="color" value="ঠিক করে দিন" data-hex=""><span>আপনি ঠিক করে দিন</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="সবুজ" data-hex="#1b8a5a"><span><i class="dot" style="--c:#1b8a5a"></i>সবুজ</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="নীল" data-hex="#1f5fd1"><span><i class="dot" style="--c:#1f5fd1"></i>নীল</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="লাল" data-hex="#c8352d"><span><i class="dot" style="--c:#c8352d"></i>লাল</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="কমলা" data-hex="#e07a1a"><span><i class="dot" style="--c:#e07a1a"></i>কমলা</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="বেগুনি" data-hex="#7a3fb0"><span><i class="dot" style="--c:#7a3fb0"></i>বেগুনি</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="কালো" data-hex="#1c1f24"><span><i class="dot" style="--c:#1c1f24"></i>কালো</span></label>
+          <label class="choice check"><input type="checkbox" name="color" value="নিজের পছন্দের রং" id="customRadio" data-hex="#0b6e5c"><span class="custom-color">নিজের পছন্দের রং <input type="color" id="customColor" value="#0b6e5c" aria-label="রং বেছে নিন"></span></label>
+        </div>
+        <div class="preview" id="preview" hidden>
+          <span id="pvName">আপনার দোকানের নাম</span>
+          <span class="pv-btn">নতুন কিস্তি যোগ করুন</span>
+        </div>
+        <p class="preview-cap" id="pvCap" hidden>বেছে নেওয়া রংগুলো সফটওয়্যারে এভাবে মিলিয়ে ব্যবহার হতে পারে।</p>
+      </fieldset>
+
+      <div class="row">
+        <fieldset class="field">
+          <legend class="t">ভাষা</legend>
+          <div class="choices one">
+            <label class="choice radio"><input type="radio" name="lang" value="বাংলা" checked><span>বাংলা</span></label>
+            <label class="choice radio"><input type="radio" name="lang" value="English"><span>English</span></label>
+            <label class="choice radio"><input type="radio" name="lang" value="বাংলা ও English দুটোই"><span>দুটোই</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="field">
+          <legend class="t">কোথায় চালাবেন?</legend>
+          <div class="choices one">
+            <label class="choice radio"><input type="radio" name="device" value="মোবাইলে"><span>মোবাইলে</span></label>
+            <label class="choice radio"><input type="radio" name="device" value="কম্পিউটারে"><span>কম্পিউটারে</span></label>
+            <label class="choice radio"><input type="radio" name="device" value="মোবাইল ও কম্পিউটার দুটোতেই" checked><span>দুটোতেই</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="field">
+        <label class="t" for="deadline">কতদিনের মধ্যে দরকার?<span class="opt">ঐচ্ছিক</span></label>
+        <select id="deadline">
+          <option value="">বেছে নিন</option>
+          <option>৭ দিনের মধ্যে</option>
+          <option>১৫ দিনের মধ্যে</option>
+          <option>১ মাসের মধ্যে</option>
+          <option>তাড়া নেই</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="t" for="note">আর কিছু জানাতে চাইলে লিখুন<span class="opt">ঐচ্ছিক</span></label>
+        <textarea id="note" rows="3"></textarea>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="submit" class="btn">তথ্য তৈরি করুন</button>
+    </div>
+    <p class="note">এই ফর্মের তথ্য নিজে থেকে কোথাও জমা হয় না। পরের ধাপে আপনি নিজে পাঠিয়ে দেবেন।</p>
+  </form>
+</div>
+
+<div id="resultView" class="result" hidden>
+  <p class="eyebrow">শেষ ধাপ</p>
+  <h2>তথ্য তৈরি হয়েছে, এবার পাঠিয়ে দিন</h2>
+  <p class="warn"><strong>এখনো পাঠানো হয়নি।</strong> <span id="sendHelp">নিচের লেখাটি কপি করে যাকে ফর্ম পাঠিয়েছেন তাকে পাঠিয়ে দিন।</span></p>
+  <label class="t" for="out" style="position:absolute;left:-9999px">তৈরি হওয়া তথ্য</label>
+  <textarea id="out" readonly></textarea>
+  <div class="actions">
+    <a class="btn" id="waBtn" href="#" target="_blank" rel="noopener" hidden>WhatsApp-এ শেয়ার করুন</a>
+    <button type="button" class="btn ghost" id="copyBtn">লেখাটি কপি করুন</button>
+    <button type="button" class="btn ghost" id="backBtn">ফর্মে ফিরে ঠিক করুন</button>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+</div>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // WhatsApp number that receives the filled form, e.g. "8801XXXXXXXXX". Leave empty to show Copy only.
+  var CONFIG = { whatsapp: "" };
+
+  var BNUM = "০১২৩৪৫৬৭৮৯";
+  function $(s, r){ return (r || document).querySelector(s); }
+  function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function bn(n){ return String(n).replace(/\d/g, function(d){ return BNUM.charAt(d); }); }
+  function en(s){ return String(s).replace(/[০-৯]/g, function(d){ return BNUM.indexOf(d); }); }
+  function val(id){ var e = document.getElementById(id); return e ? e.value.trim() : ""; }
+  function phoneDigits(s){ return en(s).replace(/[\s\-+()]/g, ""); }
+  function phoneOk(s){ return /^\d{9,15}$/.test(phoneDigits(s)); }
+  function emailOk(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+
+  function waNumber(){
+    var raw = CONFIG.whatsapp;
+    try {
+      var q = new URLSearchParams(location.search).get("wa");
+      if (q) raw = q;
+      var m = /^#wa-(\d{8,15})$/.exec(location.hash);
+      if (m) raw = m[1];
+    } catch (e) {}
+    var d = phoneDigits(raw || "");
+    if (/^01\d{9}$/.test(d)) d = "88" + d;
+    return /^\d{10,15}$/.test(d) ? d : "";
+  }
+
+  var form = $("#f");
+  var MUST = [
+    { id: "shopName",     msg: "দোকানের নাম লিখুন" },
+    { id: "shopType",     msg: "একটি বেছে নিন" },
+    { id: "shopAddress",  msg: "দোকানের ঠিকানা লিখুন" },
+    { id: "shopPhone" },
+    { id: "ownerName",    msg: "আপনার নাম লিখুন" },
+    { id: "ownerPhone" },
+    { id: "ownerAddress", msg: "ব্যক্তিগত ঠিকানা লিখুন" }
+  ];
+  var GROUPS = [
+    { id: "features", name: "feature", msg: "অন্তত একটি ফিচার বেছে নিন" },
+    { id: "instType", name: "inst",    msg: "অন্তত একটি বেছে নিন" }
+  ];
+
+  function fieldOk(f){
+    var v = val(f.id);
+    return f.phone ? phoneOk(v) : v !== "";
+  }
+  function groupOk(g){ return $$('input[name="' + g.name + '"]:checked').length > 0; }
+
+  function setErr(id, msg){
+    var p = document.getElementById("err-" + id);
+    var el = document.getElementById(id);
+    if (p) { p.textContent = msg || ""; p.hidden = !msg; }
+    if (el && el.tagName !== "FIELDSET") {
+      if (msg) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    }
+  }
+
+  function updateProgress(){
+    var done = 0, total = MUST.length + GROUPS.length;
+    MUST.forEach(function(f){ if (fieldOk(f)) done++; });
+    GROUPS.forEach(function(g){ if (groupOk(g)) done++; });
+    $("#barFill").style.width = Math.round(done / total * 100) + "%";
+    $("#barText").textContent = bn(done) + "/" + bn(total) + " পূরণ";
+  }
+
+  function validate(){ return null; }
+
+  // Clear an error as soon as the field is fixed; keep the progress bar live.
+  form.addEventListener("input", function(e){
+    var id = e.target.id;
+    MUST.forEach(function(f){ if (f.id === id && fieldOk(f)) setErr(id, ""); });
+    updateProgress();
+    updatePreview();
+  });
+  form.addEventListener("change", function(e){
+    GROUPS.forEach(function(g){ if (groupOk(g)) setErr(g.id, ""); });
+    if (e.target.id === "shopType") $("#otherTypeWrap").hidden = e.target.value !== "অন্যান্য";
+    updateProgress();
+    updatePreview();
+  });
+
+  // Colour preview
+  function textOn(hex){
+    var h = hex.replace("#", "");
+    if (h.length === 3) h = h.replace(/(.)/g, "$1$1");
+    var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? "#111111" : "#ffffff";
+  }
+  function getColors(){
+    return $$('input[name="color"]:checked').filter(function(r){ return r.getAttribute("data-hex"); }).map(function(r){
+      return { name: r.value, hex: r.id === "customRadio" ? $("#customColor").value : r.getAttribute("data-hex") };
+    });
+  }
+  function updatePreview(){
+    var cs = getColors(), pv = $("#preview");
+    pv.hidden = !cs.length; $("#pvCap").hidden = !cs.length;
+    if (!cs.length) return;
+    var hexes = cs.map(function(c){ return c.hex; });
+    pv.style.background = hexes.length > 1 ? "linear-gradient(90deg," + hexes.join(",") + ")" : hexes[0];
+    pv.style.color = textOn(hexes[0]);
+    $("#pvName").textContent = val("projectName") || val("shopName") || "আপনার দোকানের নাম";
+  }
+  $("#customColor").addEventListener("input", function(){
+    $("#customRadio").checked = true;
+    $("#customRadio").setAttribute("data-hex", this.value);
+    updatePreview();
+  });
+  $("#customColor").addEventListener("click", function(e){ e.stopPropagation(); });
+
+  // Build the message
+  function checkedLabels(name){
+    return $$('input[name="' + name + '"]:checked').map(function(i){
+      var s = i.parentNode.querySelector("span");
+      return s.textContent.trim();
+    });
+  }
+  function radio(name){
+    var r = $('input[name="' + name + '"]:checked');
+    return r ? r.value : "";
+  }
+  function line(label, value){ return value ? label + ": " + value : null; }
+
+  function today(){
+    var d = new Date();
+    function p(n){ return (n < 10 ? "0" : "") + n; }
+    return bn(p(d.getDate()) + "/" + p(d.getMonth() + 1) + "/" + d.getFullYear());
+  }
+
+  function build(){
+    var type = val("shopType");
+    if (type === "অন্যান্য" && val("shopTypeOther")) type = "অন্যান্য (" + val("shopTypeOther") + ")";
+    var cs = getColors();
+    var color = cs.map(function(c){ return c.name + " (" + c.hex + ")"; });
+    if ($('input[name="color"][value="ঠিক করে দিন"]:checked')) color.unshift("আপনি ঠিক করে দিন");
+    color = color.join(", ");
+    var feats = checkedLabels("feature").map(function(t){ return "- " + t; });
+
+    var parts = [
+      "সফটওয়্যার তথ্য ফর্ম",
+      "তারিখ: " + today(),
+      "",
+      "[দোকান]",
+      line("দোকানের নাম", val("shopName")),
+      line("কী বিক্রি হয়", type),
+      line("ঠিকানা", val("shopAddress")),
+      line("ফোন", val("shopPhone")),
+      line("কিস্তিতে দেওয়া পণ্য", val("soldItems")),
+      line("লোগো", radio("logo")),
+      "",
+      "[মালিক]",
+      line("নাম", val("ownerName")),
+      line("ব্যক্তিগত ফোন", val("ownerPhone")),
+      line("WhatsApp", val("ownerWa")),
+      line("ইমেইল", val("ownerEmail")),
+      line("ব্যক্তিগত ঠিকানা", val("ownerAddress")),
+      "",
+      "[সফটওয়্যারে যা লাগবে]"
+    ].concat(feats, [
+      line("আরও লাগবে", val("extra")),
+      "",
+      "[কিস্তির নিয়ম]",
+      line("কিস্তি নেন", checkedLabels("inst").join(", ")),
+      line("কিস্তির ক্রেতা এখন", val("clientCount")),
+      line("লাভ ধরা", radio("profit")),
+      line("ডাউন পেমেন্ট", radio("down")),
+      line("দেরিতে জরিমানা", radio("late")),
+      line("আগের খাতার হিসাব", radio("old")),
+      "",
+      "[নাম ও রং]",
+      line("সফটওয়্যারের নাম", val("projectName")),
+      line("পছন্দের রং", color),
+      line("ভাষা", radio("lang")),
+      line("চালাবেন", radio("device")),
+      line("কতদিনে দরকার", val("deadline")),
+      line("অন্য কথা", val("note"))
+    ]);
+
+    // Skip unanswered lines (null); keep "" as the blank separator between sections.
+    var out = [];
+    parts.forEach(function(l){
+      if (l === null) return;
+      if (l === "" && (out.length === 0 || out[out.length - 1] === "")) return;
+      out.push(l);
+    });
+    while (out.length && out[out.length - 1] === "") out.pop();
+    // Hide section headings that ended up with nothing under them.
+    out = out.filter(function(l, i){ return !(/^\[.*\]$/.test(l) && (i === out.length - 1 || out[i + 1] === "")); });
+    var clean = [];
+    out.forEach(function(l){ if (!(l === "" && clean[clean.length - 1] === "")) clean.push(l); });
+    return clean.join("\n");
+  }
+
+  // Submit
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    updateProgress();
+    var msg = build();
+    $("#out").value = msg;
+    var wa = waNumber(), btn = $("#waBtn");
+    btn.href = "https://wa.me/" + (wa || "") + "?text=" + encodeURIComponent(msg);
+    btn.hidden = false;
+    $("#sendHelp").textContent = wa
+      ? "WhatsApp বাটনে চাপ দিলে লেখাটি সহ চ্যাট খুলবে, সেখানে Send চাপুন।"
+      : "WhatsApp বাটনে চাপ দিন, যাকে পাঠাবেন তাকে বেছে নিয়ে Send চাপুন।";
+    $("#formView").hidden = true;
+    $("#resultView").hidden = false;
+    $("#status").textContent = "";
+    window.scrollTo(0, 0);
+  });
+
+  $("#backBtn").addEventListener("click", function(){
+    $("#resultView").hidden = true;
+    $("#formView").hidden = false;
+    window.scrollTo(0, 0);
+  });
+
+  $("#out").addEventListener("focus", function(){ this.select(); });
+
+  $("#copyBtn").addEventListener("click", function(){
+    var out = $("#out"), st = $("#status");
+    function ok(){ st.textContent = "কপি হয়েছে। এবার মেসেজে পেস্ট করে পাঠিয়ে দিন।"; }
+    function fail(){
+      out.focus(); out.select();
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (x) {}
+      st.textContent = done ? "কপি হয়েছে। এবার মেসেজে পেস্ট করে পাঠিয়ে দিন।" : "কপি হয়নি। লেখাটি চেপে ধরে কপি করুন।";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(ok, fail);
+    } else { fail(); }
+  });
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>
