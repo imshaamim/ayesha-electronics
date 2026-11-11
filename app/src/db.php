@@ -15,6 +15,17 @@ function db(): PDO
     return $pdo;
 }
 
+/** Write a consistent copy of the database to $file (works on older SQLite too). */
+function db_snapshot(string $file): void
+{
+    try {
+        db()->exec('VACUUM INTO ' . db()->quote($file));
+    } catch (Throwable $e) {
+        db()->exec('PRAGMA wal_checkpoint(TRUNCATE)');
+        if (!copy(DATA_DIR . '/data.db', $file)) throw $e;
+    }
+}
+
 function q(string $sql, array $p = []): PDOStatement
 {
     $st = db()->prepare($sql);

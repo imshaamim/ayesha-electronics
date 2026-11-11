@@ -200,7 +200,7 @@ function daily_backup(): void
     $file = DATA_DIR . '/backups/data-' . today() . '.db';
     if (is_file($file)) return;
     try {
-        db()->exec('VACUUM INTO ' . db()->quote($file));
+        db_snapshot($file);
         $old = glob(DATA_DIR . '/backups/data-*.db') ?: [];
         sort($old);
         foreach (array_slice($old, 0, max(count($old) - 30, 0)) as $o) @unlink($o);

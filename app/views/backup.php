@@ -23,7 +23,7 @@ if (!class_exists('ZipArchive')) {
 
 $tmpDb = sys_get_temp_dir() . '/ayesha_' . bin2hex(random_bytes(6)) . '.db';
 $tmpZip = sys_get_temp_dir() . '/ayesha_' . bin2hex(random_bytes(6)) . '.zip';
-db()->exec('VACUUM INTO ' . db()->quote($tmpDb));
+db_snapshot($tmpDb);
 
 $zip = new ZipArchive();
 $zip->open($tmpZip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
