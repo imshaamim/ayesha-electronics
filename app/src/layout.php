@@ -25,7 +25,7 @@ function head_tags(string $title): void
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="assets/app.css?v=<?= filemtime(APP_ROOT . "/assets/app.css") ?>">
 </head>
     <?php
 }
@@ -68,6 +68,7 @@ function layout_start(string $title, string $active): void
     <div class="side-foot">
       <a href="<?= url('trash') ?>" class="<?= $active === 'trash' ? 'on' : '' ?>"><?= icon('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>', 18) ?><span>ট্র্যাশ</span></a>
       <a href="<?= url('logout') ?>"><?= icon('<path d="M15 4h4v16h-4M10 17l5-5-5-5M15 12H3"/>', 18) ?><span>লগআউট</span></a>
+      <p class="credit">Made by <svg class="heart" width="12" height="12" viewBox="0 0 24 24" aria-label="love" role="img"><path d="M12 21s-7.5-4.6-9.6-9.1C.9 8.7 2.7 4.5 6.6 4.5c2.2 0 3.7 1.3 5.4 3.2 1.7-1.9 3.2-3.2 5.4-3.2 3.9 0 5.7 4.2 4.2 7.4C19.5 16.4 12 21 12 21z"/></svg> <a href="https://shaamim.com/" target="_blank" rel="noopener" title="shaamim.com">Shamim Hossain</a></p>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -95,7 +96,7 @@ function layout_end(): void
     </main>
   </div>
 </div>
-<script src="assets/app.js?v=<?= APP_VERSION ?>"></script>
+<script src="assets/app.js?v=<?= filemtime(APP_ROOT . "/assets/app.js") ?>"></script>
 </body>
 </html>
     <?php
