@@ -42,6 +42,13 @@ $pct = $tot['sold'] > 0 ? min(100, round($tot['paid'] / $tot['sold'] * 100)) : 0
 $monthPct = $expectedMonth > 0 ? min(100, round($collectedMonth / $expectedMonth * 100)) : 0;
 
 layout_start('ড্যাশবোর্ড', 'dashboard');
+$lastBackup = setting('last_backup_at');
+if (!$lastBackup || strtotime($lastBackup) < strtotime('-7 days')): ?>
+  <div class="flash warn-box" role="status">
+    <span><?= $lastBackup ? 'শেষ ব্যাকআপ নেওয়া হয়েছে ' . e(date('d M', strtotime($lastBackup))) . '। এক সপ্তাহ পার হয়ে গেছে।' : 'এখনো কোনো ব্যাকআপ ডাউনলোড করা হয়নি।' ?></span>
+    <a class="btn dark sm" href="<?= url('backup', ['type' => 'zip']) ?>">এখন ব্যাকআপ নিন</a>
+  </div>
+<?php endif;
 $hour = (int)date('G');
 page_head(
     'ড্যাশবোর্ড',

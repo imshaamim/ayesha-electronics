@@ -8,9 +8,9 @@ if (get('type') === 'csv') {
     header('Content-Disposition: attachment; filename="customers_' . $stamp . '.csv"');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF"); // so Excel reads Bangla correctly
-    fputcsv($out, ['ID', 'নাম', 'মোবাইল', 'NID', 'ঠিকানা', 'মোট কিস্তি', 'পরিশোধ', 'বাকি', 'বকেয়া', 'পরের কিস্তি'], ',', '"', '');
+    fputcsv($out, ['ID', 'মেমো নং', 'নাম', 'মোবাইল', 'NID', 'ঠিকানা', 'মোট কিস্তি', 'পরিশোধ', 'বাকি', 'বকেয়া', 'পরের কিস্তি'], ',', '"', '');
     foreach (all('SELECT * FROM customer_balance ORDER BY id') as $c) {
-        fputcsv($out, [$c['id'], $c['name'], $c['phone'], $c['nid'], $c['address'], round($c['total_payable']), round($c['paid']), round($c['balance']), round($c['overdue']), $c['next_due']], ',', '"', '');
+        fputcsv($out, [$c['id'], $c['memo_no'], $c['name'], $c['phone'], $c['nid'], $c['address'], round($c['total_payable']), round($c['paid']), round($c['balance']), round($c['overdue']), $c['next_due']], ',', '"', '');
     }
     fclose($out);
     exit;
@@ -28,15 +28,20 @@ db()->exec('VACUUM INTO ' . db()->quote($tmpDb));
 $zip = new ZipArchive();
 $zip->open($tmpZip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 $zip->addFile($tmpDb, 'ayesha-data/data.db');
-foreach (glob(DATA_DIR . '/uploads/*') ?: [] as $f) {
-    $zip->addFile($f, 'ayesha-data/uploads/' . basename($f));
+$withPhotos = get('photos') === '1';
+if ($withPhotos) {
+    foreach (glob(DATA_DIR . '/uploads/*') ?: [] as $f) {
+        $zip->addFile($f, 'ayesha-data/uploads/' . basename($f));
+    }
 }
 $zip->addFromString('ayesha-data/README.txt',
-    "Ayesha Electronics backup, $stamp\n\nTo restore: replace the ayesha-data folder on the server with this one.\n");
+    "Ayesha Electronics backup, $stamp\n" . ($withPhotos ? "Includes photos.\n" : "Accounts only, no photos.\n")
+    . "\nTo restore: put data.db into the ayesha-data folder on the server (keep the uploads folder as it is).\n");
+set_setting('last_backup_at', date('Y-m-d H:i:s'));
 $zip->close();
 
 header('Content-Type: application/zip');
-header('Content-Disposition: attachment; filename="ayesha-backup_' . $stamp . '.zip"');
+header('Content-Disposition: attachment; filename="ayesha-backup_' . $stamp . ($withPhotos ? '_with-photos' : '') . '.zip"');
 header('Content-Length: ' . filesize($tmpZip));
 readfile($tmpZip);
 @unlink($tmpDb);

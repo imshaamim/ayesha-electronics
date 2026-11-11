@@ -38,7 +38,43 @@ function set_setting(string $k, string $v): void
 function migrate(PDO $pdo): void
 {
     $v = (int)$pdo->query('PRAGMA user_version')->fetchColumn();
-    if ($v >= 1) return;
+    if ($v < 1) migrate_v1($pdo);
+    if ($v < 2) migrate_v2($pdo);
+}
+
+/** v2: own memo numbers, own selling price (not tied to stock price), product photo instead of NID back. */
+function migrate_v2(PDO $pdo): void
+{
+    $pdo->exec(<<<SQL
+ALTER TABLE customers ADD COLUMN memo_no TEXT;
+ALTER TABLE customers RENAME COLUMN nid_back TO product_photo;
+ALTER TABLE sales ADD COLUMN memo_no TEXT;
+ALTER TABLE sales ADD COLUMN cost_price REAL NOT NULL DEFAULT 0;
+CREATE INDEX idx_cust_memo ON customers(memo_no);
+CREATE INDEX idx_sale_memo ON sales(memo_no);
+
+DROP VIEW customer_balance;
+CREATE VIEW customer_balance AS
+SELECT c.id, c.memo_no, c.name, c.phone, c.address, c.nid, c.photo, c.created_at,
+  COUNT(sb.id) AS sales_count,
+  COALESCE(SUM(CASE WHEN sb.balance > 0.5 THEN 1 ELSE 0 END), 0) AS active_count,
+  COALESCE(SUM(sb.total_payable), 0) AS total_payable,
+  COALESCE(SUM(sb.paid), 0) AS paid,
+  COALESCE(SUM(sb.balance), 0) AS balance,
+  COALESCE(SUM(sb.overdue), 0) AS overdue,
+  MIN(sb.next_due) AS next_due,
+  GROUP_CONCAT(sb.memo_no, ' ') AS sale_memos
+FROM customers c LEFT JOIN sale_balance sb ON sb.customer_id = c.id
+WHERE c.deleted_at IS NULL
+GROUP BY c.id;
+
+DELETE FROM settings WHERE key = 'default_rate';
+PRAGMA user_version = 2;
+SQL);
+}
+
+function migrate_v1(PDO $pdo): void
+{
 
     $pdo->exec(<<<SQL
 CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT);

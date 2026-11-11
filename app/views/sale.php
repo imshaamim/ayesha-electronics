@@ -16,7 +16,7 @@ layout_start($s['product_name'], 'customers');
 <p class="crumb"><a href="<?= url('customers') ?>">ক্রেতা</a> / <a href="<?= url('customer', ['id' => $s['customer_id']]) ?>"><?= e($s['customer_name']) ?></a> / কিস্তি #<?= $id ?></p>
 <?php page_head(
     $s['product_name'],
-    '<a href="' . url('customer', ['id' => $s['customer_id']]) . '">' . e($s['customer_name']) . '</a> · বিক্রি ' . bn_date($s['sale_date']) . ' · ' . (int)$s['months'] . ' মাসের কিস্তি'
+    ($s['memo_no'] ? 'মেমো <b>' . e($s['memo_no']) . '</b> · ' : '') . '<a href="' . url('customer', ['id' => $s['customer_id']]) . '">' . e($s['customer_name']) . '</a> · বিক্রি ' . bn_date($s['sale_date']) . ' · ' . (int)$s['months'] . ' মাসের কিস্তি'
     . ($s['balance'] <= 0.5 ? ' · <span class="badge dark">সব পরিশোধিত</span>' : ($s['overdue'] > 0.5 ? ' · <span class="badge bad">' . $lateCount . 'টি কিস্তি বকেয়া</span>' : ' · <span class="badge ok">নিয়মিত</span>'))
 ); ?>
 
@@ -96,12 +96,16 @@ layout_start($s['product_name'], 'customers');
       <div class="card-h"><h2>হিসাবের বিবরণ</h2></div>
       <div class="card-b">
         <dl class="kv" style="grid-template-columns:1fr auto;row-gap:8px">
-          <dt>পণ্যের দাম</dt><dd class="money"><?= money($s['price']) ?></dd>
+          <?php if ($s['memo_no']): ?><dt>মেমো নম্বর</dt><dd><?= e($s['memo_no']) ?></dd><?php endif; ?>
+          <dt>বিক্রয়মূল্য</dt><dd class="money"><?= money($s['price']) ?></dd>
           <dt>ডাউন পেমেন্ট</dt><dd class="money">− <?= money($s['down_payment']) ?></dd>
-          <dt>বাকি দাম</dt><dd class="money"><?= money($s['price'] - $s['down_payment']) ?></dd>
-          <dt>লাভ (<?= rtrim(rtrim(number_format((float)$s['profit_rate'], 2), '0'), '.') ?>% × <?= (int)$s['months'] ?> মাস)</dt><dd class="money">+ <?= money($s['profit']) ?></dd>
-          <dt class="fw" style="color:var(--ink)">মোট কিস্তির টাকা</dt><dd class="money fw"><?= money($s['total_payable']) ?></dd>
+          <dt class="fw" style="color:var(--ink)">কিস্তিতে মোট</dt><dd class="money fw"><?= money($s['total_payable']) ?></dd>
+          <?php $lastAmt = $sched ? (float)end($sched)['amount'] : 0; $n = (int)$s['months']; $same = $n <= 1 || abs($lastAmt - $s['installment_amount']) < 1; ?>
+          <dt>কিস্তি</dt><dd><?= money($s['installment_amount']) ?> × <?= $same ? $n : $n - 1 ?><?= $same ? '' : '<br><small class="t-muted">শেষ কিস্তি ' . money($lastAmt) . '</small>' ?></dd>
         </dl>
+        <?php if ($s['cost_price'] > 0): ?>
+          <p class="t-muted" style="margin-top:12px;font-size:13.5px">ক্রয়মূল্য <?= money($s['cost_price']) ?> · আপনার লাভ <b class="t-green"><?= money($s['profit']) ?></b></p>
+        <?php endif; ?>
         <?php if ($s['note']): ?><p style="margin-top:12px" class="t-muted">নোট: <?= e($s['note']) ?></p><?php endif; ?>
       </div>
     </section>

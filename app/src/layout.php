@@ -79,7 +79,7 @@ function layout_start(string $title, string $active): void
       <form class="search" action="index.php" method="get" role="search">
         <input type="hidden" name="r" value="customers">
         <?= icon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', 18) ?>
-        <input type="search" name="q" id="gsearch" placeholder="ক্রেতা খুঁজুন: নাম, ফোন, NID বা আইডি" autocomplete="off" value="<?= e($active === 'customers' ? get('q') : '') ?>" aria-label="ক্রেতা খুঁজুন">
+        <input type="search" name="q" id="gsearch" placeholder="ক্রেতা খুঁজুন: নাম, ফোন, মেমো নং বা NID" autocomplete="off" value="<?= e($active === 'customers' ? get('q') : '') ?>" aria-label="ক্রেতা খুঁজুন">
         <div class="search-pop" id="searchPop" hidden></div>
       </form>
       <a class="btn sm" href="<?= url('customer_form') ?>"><?= icon('<path d="M12 5v14M5 12h14"/>', 18) ?><span class="hide-sm">নতুন ক্রেতা</span></a>

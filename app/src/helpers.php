@@ -76,16 +76,27 @@ function add_months(string $date, int $n): string
 }
 
 /**
- * Flat-rate installment maths, the way most installment shops count it:
- * profit = (price - down payment) x monthly rate % x months.
+ * The shop sets its own selling price, down payment and monthly installment.
+ * Installments cover (price - down); the last one takes whatever is left.
+ * Profit is only for reports: selling price - purchase price (if known).
  */
-function calc_sale(float $price, float $down, float $rate, int $months): array
+function calc_sale(float $price, float $down, int $months, float $installment = 0, float $cost = 0): array
 {
-    $financed = max($price - $down, 0);
-    $profit   = round($financed * $rate / 100 * $months);
-    $total    = $financed + $profit;
-    $inst     = $months > 0 ? round($total / $months) : $total;
-    return ['financed' => $financed, 'profit' => $profit, 'total' => $total, 'installment' => $inst];
+    $total = max($price - $down, 0);
+    $inst  = $installment > 0 ? round($installment) : ($months > 0 ? round($total / $months) : $total);
+    $last  = $months > 0 ? $total - $inst * ($months - 1) : $total;
+    return [
+        'total'       => $total,
+        'installment' => $inst,
+        'last'        => $last,
+        'profit'      => $cost > 0 ? $price - $cost : 0,
+    ];
+}
+
+/** Amount of installment no. $i (1-based) out of $months. */
+function installment_amount(array $calc, int $i, int $months): float
+{
+    return $i < $months ? $calc['installment'] : $calc['last'];
 }
 
 /** Installment rows for one sale with how much of each is paid. */
@@ -118,44 +129,67 @@ function state_badge(string $s): string
     return '<span class="badge ' . $c . '">' . $t . '</span>';
 }
 
-/** Save an uploaded image (resized to save hosting space). Returns stored filename or null. */
-function save_upload(string $field): ?string
+const IMG_MAX_BYTES = 400 * 1024;  // every stored photo stays under 400 KB
+const IMG_MAX_SIDE  = 1280;        // enough to read an NID, small enough for backups
+
+/**
+ * Save an uploaded photo, shrunk and re-compressed until it is under 400 KB.
+ * Returns the stored filename, or null (with a message in $GLOBALS['upload_errors']).
+ */
+function save_upload(string $field, string $label = 'ছবি'): ?string
 {
     $f = $_FILES[$field] ?? null;
     if (!$f || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
-    if ($f['error'] !== UPLOAD_ERR_OK || $f['size'] > 10 * 1024 * 1024) return null;
+    $fail = function (string $why) use ($label) { $GLOBALS['upload_errors'][] = "$label: $why"; return null; };
+
+    if (in_array($f['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) return $fail('ফাইলটি অনেক বড়, আপলোড হয়নি।');
+    if ($f['error'] !== UPLOAD_ERR_OK) return $fail('আপলোড হয়নি, আবার চেষ্টা করুন।');
 
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
-    $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime] ?? null;
-    if (!$ext) return null;
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) return $fail('শুধু JPG, PNG বা WebP ছবি দেওয়া যাবে।');
 
-    $name = bin2hex(random_bytes(12));
-    $dest = DATA_DIR . '/uploads/';
+    $name = bin2hex(random_bytes(12)) . '.jpg';
+    $dest = DATA_DIR . '/uploads/' . $name;
 
-    if (function_exists('imagecreatefromstring')) {
-        $img = @imagecreatefromstring((string)file_get_contents($f['tmp_name']));
-        if ($img) {
-            if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
-                $o = (int)(@exif_read_data($f['tmp_name'])['Orientation'] ?? 1);
-                if ($o === 3) $img = imagerotate($img, 180, 0);
-                if ($o === 6) $img = imagerotate($img, -90, 0);
-                if ($o === 8) $img = imagerotate($img, 90, 0);
-            }
-            $w = imagesx($img); $h = imagesy($img); $max = 1400;
-            if (max($w, $h) > $max) {
-                $s = $max / max($w, $h);
-                $img = imagescale($img, (int)round($w * $s), (int)round($h * $s));
-            }
-            $flat = imagecreatetruecolor(imagesx($img), imagesy($img));
-            imagefill($flat, 0, 0, imagecolorallocate($flat, 255, 255, 255));
-            imagecopy($flat, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
-            imagejpeg($flat, $dest . $name . '.jpg', 82);
-            return $name . '.jpg';
-        }
+    if (!function_exists('imagecreatefromstring')) {
+        // No image library on the server: accept only files that are already small.
+        if ($f['size'] > IMG_MAX_BYTES || $mime !== 'image/jpeg') return $fail('৪০০ KB-এর কম JPG ছবি দিন।');
+        move_uploaded_file($f['tmp_name'], $dest);
+        return $name;
     }
-    move_uploaded_file($f['tmp_name'], $dest . $name . '.' . $ext);
-    return $name . '.' . $ext;
+
+    $img = @imagecreatefromstring((string)file_get_contents($f['tmp_name']));
+    if (!$img) return $fail('ছবিটি পড়া যায়নি।');
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+        $o = (int)(@exif_read_data($f['tmp_name'])['Orientation'] ?? 1);
+        if ($o === 3) $img = imagerotate($img, 180, 0);
+        if ($o === 6) $img = imagerotate($img, -90, 0);
+        if ($o === 8) $img = imagerotate($img, 90, 0);
+    }
+
+    $side = IMG_MAX_SIDE;
+    for ($try = 0; $try < 8; $try++) {
+        $w = imagesx($img); $h = imagesy($img);
+        $s = min(1, $side / max($w, $h));
+        $tw = max(1, (int)round($w * $s)); $th = max(1, (int)round($h * $s));
+        $out = imagecreatetruecolor($tw, $th);
+        imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
+        imagecopyresampled($out, $img, 0, 0, 0, 0, $tw, $th, $w, $h);
+        foreach ([80, 70, 60, 50] as $quality) {
+            ob_start();
+            imagejpeg($out, null, $quality);
+            $bytes = (string)ob_get_clean();
+            if (strlen($bytes) <= IMG_MAX_BYTES) {
+                file_put_contents($dest, $bytes);
+                return $name;
+            }
+        }
+        $side = (int)round($side * 0.8);
+    }
+    return $fail('ছবিটি ৪০০ KB-এর মধ্যে আনা যায়নি।');
 }
+
+function upload_errors(): array { return $GLOBALS['upload_errors'] ?? []; }
 
 function file_url(?string $f): string { return $f ? url('file', ['f' => $f]) : ''; }
 

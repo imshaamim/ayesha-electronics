@@ -7,8 +7,8 @@ $where = ['1=1'];
 $p = [];
 if ($qs !== '') {
     $like = '%' . $qs . '%';
-    $where[] = '(name LIKE ? OR phone LIKE ? OR nid LIKE ? OR address LIKE ? OR CAST(id AS TEXT) = ?)';
-    array_push($p, $like, $like, $like, $like, ltrim($qs, '#'));
+    $where[] = '(name LIKE ? OR phone LIKE ? OR nid LIKE ? OR address LIKE ? OR memo_no = ? OR (\' \' || sale_memos || \' \') LIKE ? OR CAST(id AS TEXT) = ?)';
+    array_push($p, $like, $like, $like, $like, $qs, '% ' . $qs . ' %', ltrim($qs, '#'));
 }
 $filters = [
     'all'    => ['সবাই', ''],
@@ -53,7 +53,7 @@ page_head(
       <?php endif; ?>
       <?php foreach ($rows as $c): ?>
         <tr data-href="<?= url('customer', ['id' => $c['id']]) ?>">
-          <td><div class="who"><?= avatar($c['photo'], $c['name']) ?><div><a href="<?= url('customer', ['id' => $c['id']]) ?>"><b><?= e($c['name']) ?></b></a><small>#<?= (int)$c['id'] ?> · <?= e($c['phone'] ?: 'ফোন নেই') ?></small></div></div></td>
+          <td><div class="who"><?= avatar($c['photo'], $c['name']) ?><div><a href="<?= url('customer', ['id' => $c['id']]) ?>"><b><?= e($c['name']) ?></b></a><small><?= $c['memo_no'] ? 'মেমো ' . e($c['memo_no']) : '#' . (int)$c['id'] ?> · <?= e($c['phone'] ?: 'ফোন নেই') ?></small></div></div></td>
           <td class="hide-md t-muted" style="max-width:240px"><?= e(mb_strimwidth((string)$c['address'], 0, 48, '…')) ?></td>
           <td class="r money"><?= money($c['total_payable']) ?></td>
           <td class="r money fw"><?= $c['balance'] > 0.5 ? money($c['balance']) : '<span class="badge ok">বাকি নেই</span>' ?></td>

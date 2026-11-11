@@ -45,13 +45,15 @@ foreach ($plan as [$cid, $pid, $ago, $months, $down, $paidN]) {
     $p = one('SELECT * FROM products WHERE id = ?', [$pid]);
     $saleDate = date('Y-m-d', strtotime("-$ago months -" . mt_rand(0, 20) . ' days'));
     $first = add_months($saleDate, 1);
-    $calc = calc_sale((float)$p['sale_price'], $down, 2, $months);
-    q('INSERT INTO sales (customer_id, product_id, product_name, price, down_payment, profit_rate, months, profit, total_payable, installment_amount, sale_date, first_due) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-      [$cid, $pid, $p['name'], $p['sale_price'], $down, 2, $months, $calc['profit'], $calc['total'], $calc['installment'], $saleDate, $first]);
+    $price = round($p['sale_price'] * 1.18 / 100) * 100; // shop's own installment price
+    $calc = calc_sale($price, $down, $months, 0, (float)$p['cost_price']);
+    $memo = (string)(1000 + $cid * 10 + mt_rand(0, 9));
+    q('INSERT INTO sales (customer_id, memo_no, product_id, product_name, price, cost_price, down_payment, months, profit, total_payable, installment_amount, sale_date, first_due) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      [$cid, $memo, $pid, $p['name'], $price, $p['cost_price'], $down, $months, $calc['profit'], $calc['total'], $calc['installment'], $saleDate, $first]);
     $sid = (int)db()->lastInsertId();
+    q("UPDATE customers SET memo_no = ? WHERE id = ? AND (memo_no IS NULL OR memo_no = '')", [$memo, $cid]);
     for ($i = 1; $i <= $months; $i++) {
-        $amt = $i < $months ? $calc['installment'] : $calc['total'] - $calc['installment'] * ($months - 1);
-        q('INSERT INTO installments (sale_id, no, due_date, amount) VALUES (?,?,?,?)', [$sid, $i, add_months($first, $i - 1), $amt]);
+        q('INSERT INTO installments (sale_id, no, due_date, amount) VALUES (?,?,?,?)', [$sid, $i, add_months($first, $i - 1), installment_amount($calc, $i, $months)]);
     }
     q('UPDATE products SET stock = stock - 1 WHERE id = ?', [$pid]);
     for ($k = 0; $k < $paidN; $k++) {

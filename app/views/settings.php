@@ -7,7 +7,6 @@ if (is_post()) {
     if (post('form') === 'shop') {
         foreach (['shop_name', 'shop_name_en', 'shop_address', 'shop_phone', 'owner_name'] as $k) set_setting($k, post($k));
         set_setting('late_fine', (string)max(0, (int)num('late_fine')));
-        set_setting('default_rate', (string)max(0, min(20, num('default_rate'))));
         flash('সেটিংস সেভ হয়েছে।');
         redirect('settings');
     }
@@ -47,7 +46,6 @@ page_head('সেটিংস', 'দোকানের তথ্য, পাস�
         <div class="f full"><label for="shop_address">ঠিকানা</label><input id="shop_address" name="shop_address" value="<?= $v('shop_address') ?>"></div>
         <div class="f"><label for="shop_phone">ফোন</label><input id="shop_phone" name="shop_phone" type="tel" value="<?= $v('shop_phone') ?>"></div>
         <div class="f"><label for="owner_name">মালিকের নাম</label><input id="owner_name" name="owner_name" value="<?= $v('owner_name') ?>"></div>
-        <div class="f"><label for="default_rate">সাধারণ মাসিক লাভের হার (%)</label><input id="default_rate" name="default_rate" type="number" step="0.1" min="0" max="20" value="<?= $v('default_rate', '2') ?>"><p class="hint">নতুন কিস্তিতে এটি আগে থেকে বসানো থাকবে।</p></div>
         <div class="f"><label for="late_fine">দেরির জরিমানা (৳)</label><input id="late_fine" name="late_fine" type="number" min="0" value="<?= $v('late_fine', '0') ?>"><p class="hint">বকেয়া থাকলে কিস্তি জমার সময় আগে থেকে বসবে।</p></div>
       </div>
       <div class="card-b form-actions" style="border-top:1px solid var(--line);margin:0"><button class="btn" type="submit">সেভ করুন</button></div>
@@ -69,11 +67,13 @@ page_head('সেটিংস', 'দোকানের তথ্য, পাস�
     <section class="card">
       <div class="card-h"><h2>ব্যাকআপ ও ডেটা</h2></div>
       <div class="card-b">
-        <p>সব হিসাব আর ছবি একসাথে একটা ফাইলে ডাউনলোড করুন। সপ্তাহে অন্তত একবার ডাউনলোড করে কম্পিউটার বা Google Drive-এ রেখে দিন।</p>
+        <p>প্রতি সপ্তাহে একবার ব্যাকআপ ডাউনলোড করে কম্পিউটার বা Google Drive-এ রেখে দিন। এতে সব হিসাব থাকে (ক্রেতা, কিস্তি, পরিশোধ, স্টক, সাপ্লায়ার), <b>ছবি থাকে না</b>, তাই ফাইল ছোট থাকে।</p>
+        <p class="t-muted" style="font-size:13.5px;margin-top:6px">শেষ ডাউনলোড: <b><?= setting('last_backup_at') ? e(date('d M Y, h:i A', strtotime(setting('last_backup_at')))) : 'এখনো হয়নি' ?></b></p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">
-          <a class="btn" href="<?= url('backup', ['type' => 'zip']) ?>">পুরো ব্যাকআপ ডাউনলোড (.zip)</a>
-          <a class="btn ghost" href="<?= url('backup', ['type' => 'csv']) ?>">ক্রেতার তালিকা (Excel/CSV)</a>
+          <a class="btn" href="<?= url('backup', ['type' => 'zip']) ?>">সাপ্তাহিক ব্যাকআপ ডাউনলোড</a>
+          <a class="btn ghost" href="<?= url('backup', ['type' => 'csv']) ?>">ক্রেতার তালিকা (Excel)</a>
         </div>
+        <p style="font-size:13px"><a href="<?= url('backup', ['type' => 'zip', 'photos' => 1]) ?>">ছবিসহ পুরো ব্যাকআপ</a> <span class="t-muted">(বড় ফাইল, হোস্টিং বদলানোর সময় লাগবে)</span></p>
         <dl class="kv" style="grid-template-columns:1fr auto">
           <dt>ডেটাবেসের আকার</dt><dd><?= $mb($dbSize) ?></dd>
           <dt>ছবি</dt><dd><?= $upCount ?>টি · <?= $mb($upSize) ?></dd>

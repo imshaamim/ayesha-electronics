@@ -17,7 +17,7 @@ layout_start($c['name'], 'customers');
     <?= avatar($c['photo'], $c['name'], 'lg') ?>
     <div>
       <h1><?= e($c['name']) ?></h1>
-      <p class="sub">ক্রেতা #<?= $id ?> · <?= e($c['phone'] ?: 'ফোন নেই') ?>
+      <p class="sub"><?= $c['memo_no'] ? 'মেমো <b>' . e($c['memo_no']) . '</b> · ' : '' ?>ক্রেতা #<?= $id ?> ·<?= e($c['phone'] ?: 'ফোন নেই') ?>
         <?php if ($bal['overdue'] > 0.5): ?> · <span class="badge bad">বকেয়া <?= money($bal['overdue']) ?></span>
         <?php elseif ($bal['balance'] > 0.5): ?> · <span class="badge ok">নিয়মিত</span>
         <?php elseif ($bal['sales_count'] > 0): ?> · <span class="badge dark">সব পরিশোধিত</span><?php endif; ?>
@@ -48,7 +48,7 @@ layout_start($c['name'], 'customers');
         <?php if (!$sales): ?><tr><td colspan="5" class="empty-row">এখনো কোনো কিস্তির বিক্রি নেই।<br><a class="btn sm" style="margin-top:10px" href="<?= url('sale_form', ['customer_id' => $id]) ?>">+ কিস্তিতে বিক্রি যোগ করুন</a></td></tr><?php endif; ?>
         <?php foreach ($sales as $s): ?>
           <tr data-href="<?= url('sale', ['id' => $s['id']]) ?>">
-            <td><a href="<?= url('sale', ['id' => $s['id']]) ?>"><b style="font-weight:500"><?= e($s['product_name']) ?></b></a><br><small class="t-muted"><?= bn_date($s['sale_date']) ?> · <?= (int)$s['months'] ?> মাস × <?= money($s['installment_amount']) ?></small></td>
+            <td><a href="<?= url('sale', ['id' => $s['id']]) ?>"><b style="font-weight:500"><?= e($s['product_name']) ?></b></a><br><small class="t-muted"><?= $s['memo_no'] ? 'মেমো ' . e($s['memo_no']) . ' · ' : '' ?><?= bn_date($s['sale_date']) ?> ·<?= (int)$s['months'] ?> মাস × <?= money($s['installment_amount']) ?></small></td>
             <td class="r money"><?= money($s['total_payable']) ?></td>
             <td class="r money t-green"><?= money($s['paid']) ?></td>
             <td class="r money fw"><?= money($s['balance']) ?></td>
@@ -92,7 +92,7 @@ layout_start($c['name'], 'customers');
           <dt>ঠিকানা</dt><dd><?= nl2br(e($c['address'] ?: '—')) ?></dd>
           <?php if ($c['notes']): ?><dt>নোট</dt><dd><?= nl2br(e($c['notes'])) ?></dd><?php endif; ?>
         </dl>
-        <?php $docs = array_filter(['ক্রেতার ছবি' => $c['photo'], 'NID সামনে' => $c['nid_front'], 'NID পেছনে' => $c['nid_back']]); ?>
+        <?php $docs = array_filter(['ক্রেতার ছবি' => $c['photo'], 'NID সামনে' => $c['nid_front'], 'পণ্যের ছবি' => $c['product_photo']]); ?>
         <?php if ($docs): ?>
           <div class="docs" style="margin-top:16px">
             <?php foreach ($docs as $label => $f): ?><a href="<?= e(file_url($f)) ?>" target="_blank"><img src="<?= e(file_url($f)) ?>" alt="<?= e($label) ?>"><span><?= e($label) ?></span></a><?php endforeach; ?>
