@@ -7,7 +7,7 @@ $CONFIG = is_file(APP_ROOT . '/config.php') ? (require APP_ROOT . '/config.php')
 // Data (database, photos, backups) lives OUTSIDE the website folder by default:
 // on the server that is /home/<user>/ayesha-data, next to the subdomain folder.
 define('DATA_DIR', rtrim($CONFIG['data_dir'] ?? (dirname(APP_ROOT) . '/ayesha-data'), '/'));
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '0.0.1');
 
 date_default_timezone_set('Asia/Dhaka');
 ini_set('display_errors', '0');
