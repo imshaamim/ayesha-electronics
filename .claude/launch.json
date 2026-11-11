@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ayesha-app",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8091", "-t", "app"],
+      "port": 8091,
+      "url": "http://127.0.0.1:8091"
+    }
+  ]
+}
