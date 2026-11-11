@@ -163,6 +163,12 @@ input,select,textarea,fieldset{scroll-margin-top:72px}
   background:var(--soft);border:1px solid var(--accent);
 }
 .result textarea{min-height:340px;font-size:15px;line-height:1.7}
+.callout{
+  margin:28px 0 0;padding:16px 18px;border-radius:12px;
+  background:#3a2e05;border:2px solid #f5c542;color:#fff3c4;
+  font-size:18px;font-weight:600;line-height:1.7;
+}
+.callout b{color:#f5c542}
 .status{min-height:26px;margin:10px 0 0;color:var(--accent);font-weight:600}
 </style>
 </head>
@@ -437,6 +443,8 @@ input,select,textarea,fieldset{scroll-margin-top:72px}
       </div>
     </section>
 
+    <p class="callout"><b>📒 জরুরি:</b> খাতায় আপনি যে হিসাবগুলো রাখেন, সেগুলোর ছবি তুলে আমাকে WhatsApp-এ পাঠান।</p>
+
     <div class="actions">
       <button type="submit" class="btn">তথ্য তৈরি করুন</button>
     </div>
@@ -456,6 +464,7 @@ input,select,textarea,fieldset{scroll-margin-top:72px}
     <button type="button" class="btn ghost" id="backBtn">ফর্মে ফিরে ঠিক করুন</button>
   </div>
   <p class="status" id="status" role="status" aria-live="polite"></p>
+  <p class="callout"><b>📒 জরুরি:</b> খাতায় আপনি যে হিসাবগুলো রাখেন, সেগুলোর ছবি তুলে আমাকে WhatsApp-এ পাঠান।</p>
 </div>
 
 </main>
